@@ -159,17 +159,26 @@
                 document.body.style.overflow = 'auto';
                 document.getElementById('emulator').innerHTML = '';
             };
-            // Sound Fix: Manual Unlock Button
-            const sBtn = document.getElementById('sound-on-btn');
-            if(sBtn) sBtn.onclick = async () => {
-                if(window.SoundEngine) {
-                    await SoundEngine.init();
-                    SoundEngine.playBonus(); // Confirmation Sound
-                    sBtn.innerHTML = '🔊 SOUND ACTIVE';
-                    sBtn.style.color = '#00f2ff';
-                    sBtn.style.borderColor = '#00f2ff';
+            // Sound Logic V5: Manual Unlock
+            for (let i=0; i<3; i++) { // Security Check
+                const sBtn = document.getElementById('sound-on-btn');
+                if(sBtn) {
+                    sBtn.onclick = async () => {
+                        console.log('SOUND ACTIVATION REQUESTED');
+                        if(window.SoundEngine) {
+                            const success = await window.SoundEngine.init();
+                            if(success) {
+                                window.SoundEngine.playBonus(); // Confirmation
+                                sBtn.innerHTML = '🔊 SOUND ACTIVE';
+                                sBtn.style.color = '#00f2ff';
+                                sBtn.style.border = '2px solid #00f2ff';
+                                console.log('SOUND ACTIVATED SUCCESSFULLY');
+                            }
+                        }
+                    };
+                    break;
                 }
-            };
+            }
         };
     </script>
     <!-- Fallback external engines -->
