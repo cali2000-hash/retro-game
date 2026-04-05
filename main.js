@@ -128,13 +128,21 @@ function launchGame(game) {
     if (oldScript) oldScript.remove();
     emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
 
+    // Core Mapping
+    const cores = {
+        'nes': 'fceumm',
+        'snes': 'snes9x',
+        'gba': 'mgba',
+        'genesis': 'genesis_plus_gx'
+    };
+
     // EmulatorJS Configuration
-    // We use window variables which is the standard way for EmulatorJS
     window.EJS_player = '#game';
     window.EJS_gameUrl = game.romUrl;
-    window.EJS_core = game.system; // 'nes', 'snes', 'gba', 'genesis'
+    window.EJS_core = cores[game.system] || game.system;
     window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
     window.EJS_startOnHover = false;
+    window.EJS_language = 'en-US';
     window.EJS_buttons = {
         save: true,
         load: true,
@@ -150,7 +158,7 @@ function launchGame(game) {
     script.id = 'emulator-script';
     document.body.appendChild(script);
 
-    console.log(`Launching ${game.title} on ${game.system}...`);
+    console.log(`Launching ${game.title} with core ${window.EJS_core}...`);
 }
 
 function closeEmulator() {
