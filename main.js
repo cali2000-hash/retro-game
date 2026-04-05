@@ -6,7 +6,12 @@ const GAMES = [
         title: 'RetroJump 2077', 
         system: 'original', 
         image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', 
-        type: 'custom' 
+    },
+    { 
+        id: 'neongalaga-2077', 
+        title: 'Neon Galaga 2077', 
+        system: 'original', 
+        image: 'https://images.unsplash.com/photo-1614027164847-1b2809eb1899?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', 
     },
     // NES Games
     { id: 'mario1', title: 'Super Mario Bros.', system: 'nes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario1.nes' },
@@ -25,13 +30,11 @@ const GAMES = [
     { id: 'dkc1', title: 'Donkey Kong Country', system: 'snes', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/dkc1.sfc' },
     { id: 'sf2', title: 'Street Fighter II', system: 'snes', image: 'https://images.unsplash.com/photo-1533236897111-3e94666b2edf?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sf2.sfc' },
     
-    // Game Boy Advance
+    // GBA
     { id: 'poke-eme', title: 'Pokemon Emerald', system: 'gba', image: 'https://images.unsplash.com/photo-1613771404721-1f92d799e49f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/poke-eme.gba' },
-    { id: 'z-minish', title: 'The Legend of Zelda: The Minish Cap', system: 'gba', image: 'https://images.unsplash.com/photo-1533236897111-3e94666b2edf?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/minish.gba' },
     
-    // Genesis/MD
-    { id: 'sonic1', title: 'Sonic The Hedgehog', system: 'genesis', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sonic1.md' },
-    { id: 'sonic2', title: 'Sonic The Hedgehog 2', system: 'genesis', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sonic2.md' }
+    // Genesis
+    { id: 'sonic1', title: 'Sonic The Hedgehog', system: 'genesis', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sonic1.md' }
 ];
 
 // App State
@@ -57,26 +60,21 @@ function initApp() {
 
 function renderGames() {
     gameGrid.innerHTML = '';
-    
-    const filteredGames = currentSystem === 'all' 
-        ? GAMES 
-        : GAMES.filter(game => game.system === currentSystem);
-
+    const filteredGames = currentSystem === 'all' ? GAMES : GAMES.filter(game => game.system === currentSystem);
     if (filteredGames.length === 0) {
-        gameGrid.innerHTML = '<div class="no-games">No games found in this category.</div>';
+        gameGrid.innerHTML = '<div class=\"no-games\">No games found in this category.</div>';
         return;
     }
-
     filteredGames.forEach(game => {
         const card = document.createElement('div');
         card.className = 'game-card';
         card.innerHTML = `
-            <div class="game-image-wrapper">
-                <img src="${game.image}" alt="${game.title}" class="game-image" loading="lazy">
+            <div class=\"game-image-wrapper\">
+                <img src=\"${game.image}\" alt=\"${game.title}\" class=\"game-image\" loading=\"lazy\">
             </div>
-            <div class="game-info">
-                <span class="game-system">${game.system}</span>
-                <h3 class="game-title">${game.title}</h3>
+            <div class=\"game-info\">
+                <span class=\"game-system\">${game.system}</span>
+                <h3 class=\"game-title\">${game.title}</h3>
             </div>
         `;
         card.addEventListener('click', () => launchGame(game));
@@ -85,7 +83,6 @@ function renderGames() {
 }
 
 function setupEventListeners() {
-    // Navigation Tabs
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             tabBtns.forEach(b => b.classList.remove('active'));
@@ -94,51 +91,33 @@ function setupEventListeners() {
             renderGames();
         });
     });
-
-    // Close Emulator
-    closeEmulatorBtn.addEventListener('click', () => {
-        closeEmulator();
-    });
-
-    // Handle Escape key
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !emulatorContainer.classList.contains('hidden')) {
-            closeEmulator();
-        }
-    });
+    closeEmulatorBtn.addEventListener('click', () => closeEmulator());
 }
 
 function launchGame(game) {
     currentGameTitle.textContent = game.title;
     emulatorContainer.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-
-    // Clear previous
     const oldScript = document.getElementById('emulator-script');
     if (oldScript) oldScript.remove();
     emulatorDiv.innerHTML = '';
 
     if (game.system === 'original') {
-        // Launch custom original game
         const canvas = document.createElement('canvas');
         canvas.id = 'original-canvas';
         canvas.classList.add('original-game-canvas');
         emulatorDiv.appendChild(canvas);
         
-        // Use the engine from game-engine.js
-        const customGame = new RetroJumpGame('original-canvas');
-        customGame.run();
+        if (game.id === 'neongalaga-2077') {
+            const galaga = new NeonGalagaGame('original-canvas');
+            galaga.run();
+        } else {
+            const jump = new RetroJumpGame('original-canvas');
+            jump.run();
+        }
     } else {
-        // Launch EmulatorJS (Use absolute URLs for paths)
         emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
-        
-        const cores = {
-            'nes': 'fceumm',
-            'snes': 'snes9x',
-            'gba': 'mgba',
-            'genesis': 'genesis_plus_gx'
-        };
-
+        const cores = { 'nes': 'fceumm', 'snes': 'snes9x', 'gba': 'mgba', 'genesis': 'genesis_plus_gx' };
         const baseUrl = window.location.origin;
         window.EJS_player = '#game';
         window.EJS_gameUrl = baseUrl + game.romUrl;
@@ -149,26 +128,17 @@ function launchGame(game) {
         window.EJS_AdUrl = '';
         window.EJS_gameID = game.id;
         window.EJS_buttons = { save: true, load: true, fullScreen: true, screenshot: true, volume: true, settings: true };
-
         const script = document.createElement('script');
         script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
         script.id = 'emulator-script';
         document.body.appendChild(script);
-        
-        console.log(`Launching ${game.title} via core ${window.EJS_core}...`);
     }
 }
 
 function closeEmulator() {
     emulatorContainer.classList.add('hidden');
     document.body.style.overflow = 'auto';
-    
-    // Stop the emulator/game
     emulatorDiv.innerHTML = '';
     const script = document.getElementById('emulator-script');
     if (script) script.remove();
-
-    // Clean up EJS
-    delete window.EJS_player; delete window.EJS_gameUrl; delete window.EJS_core;
-    delete window.EJS_pathtodata; delete window.EJS_startOnHover; delete window.EJS_buttons;
 }
