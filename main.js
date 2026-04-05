@@ -136,11 +136,11 @@ function launchGame(game) {
         'genesis': 'genesis_plus_gx'
     };
 
-    // EmulatorJS Configuration
+    // EmulatorJS Configuration (Using stable official CDN)
     window.EJS_player = '#game';
     window.EJS_gameUrl = game.romUrl;
     window.EJS_core = cores[game.system] || game.system;
-    window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
     window.EJS_startOnHover = false;
     window.EJS_language = 'en-US';
     window.EJS_buttons = {
@@ -152,13 +152,13 @@ function launchGame(game) {
         settings: true
     };
 
-    // Load EmulatorJS Loader Script
+    // Load EmulatorJS Loader Script (From stable official CDN)
     const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js';
+    script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
     script.id = 'emulator-script';
     document.body.appendChild(script);
 
-    console.log(`Launching ${game.title} with core ${window.EJS_core}...`);
+    console.log(`Launching ${game.title} with core ${window.EJS_core} from stable CDN...`);
 }
 
 function closeEmulator() {
