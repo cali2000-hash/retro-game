@@ -1,16 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetroPlay | Classic Game Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetroPlay - Neon Universe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .sound-btn { background: transparent; border: 1px solid #fff; color: #fff; padding: 5px 10px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 12px; }
-        .sound-btn:hover { background: #fff; color: #000; }
+        .sound-btn { 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 2px solid #fff; 
+            color: #fff; 
+            padding: 8px 15px; 
+            cursor: pointer; 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 13px; 
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+        .sound-btn.active { 
+            background: rgba(0, 242, 255, 0.2); 
+            border-color: #00f2ff; 
+            color: #00f2ff; 
+            box-shadow: 0 0 10px #00f2ff;
+        }
     </style>
 </head>
 <body>
@@ -18,167 +34,138 @@
     <header class="header">
         <div class="logo-container" style="display:flex; align-items:center; gap:20px;">
             <div class="logo">RETROPLAY</div>
-            <button id="sound-on-btn" class="sound-btn">🔊 SOUND ON</button>
+            <button id="sound-toggle-btn" class="sound-btn">🔊 SOUND: OFF</button>
         </div>
         <nav class="nav">
             <a href="#" class="nav-link active">Home</a>
             <a href="#" class="nav-link">Favorites</a>
-            <a href="#" class="nav-link">About</a>
+            <a href="#" class="nav-link">Originals</a>
         </nav>
     </header>
 
     <main class="main-content">
-        <section class="hero">
-            <h1 class="hero-title">Classic Gaming Reborn</h1>
-            <p class="hero-subtitle">Play retro legends instantly in your browser. No downloads required.</p>
-        </section>
+        <div class="category-tabs">
+            <button class="tab-btn active" data-category="NES">NES</button>
+            <button class="tab-btn" data-category="SNES">SNES</button>
+            <button class="tab-btn" data-category="GBA">GBA</button>
+            <button class="tab-btn" data-category="original">ORIGINALS</button>
+        </div>
 
-        <section class="game-explorer">
-            <div class="category-tabs">
-                <button class="tab-btn active" data-system="all">All</button>
-                <button class="tab-btn" data-system="nes">NES</button>
-                <button class="tab-btn" data-system="snes">SNES</button>
-                <button class="tab-btn" data-system="gba">GBA</button>
-                <button class="tab-btn" data-system="genesis">Genesis</button>
-                <button class="tab-btn" data-system="original">Originals</button>
-            </div>
-
-            <div id="game-grid" class="game-grid">
-                <!-- Games will be injected here -->
-                <div class="loading">Loading Retro Universe...</div>
-            </div>
-        </section>
+        <div id="game-grid" class="game-grid">
+            <!-- Games will be rendered here -->
+            <div class="loading-spinner">Loading Retro Universe...</div>
+        </div>
     </main>
 
-    <div id="emulator-container" class="emulator-container hidden">
-        <div class="emulator-overlay">
-            <div class="emulator-header">
-                <h2 id="current-game-title">Game Title</h2>
-                <button id="close-emulator" class="close-btn">&times;</button>
-            </div>
-            <div id="emulator" class="emulator-screen"></div>
+    <!-- Overlay / Emulator Container -->
+    <div id="emulator-overlay" class="emulator-overlay">
+        <div class="emulator-header">
+            <h2 id="current-game-title">Game Title</h2>
+            <button class="close-btn" onclick="closeGame()">&times;</button>
+        </div>
+        <div class="emulator-screen">
+            <div id="emulator"></div>
         </div>
     </div>
 
-    <!-- INLINED GAME ENGINES & LOGIC FOR MAXIMUM STABILITY -->
+    <!-- Core App Logic (Integrated V6) -->
     <script>
-        // --- DATA ---
-        const GAMES = [
-            { id: 'retrojump-2077', title: 'RetroJump 2077', system: 'original', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80' },
-            { id: 'neongalaga-2077', title: 'Neon Galaga 2077', system: 'original', image: 'https://images.unsplash.com/photo-1614027164847-1b2809eb1899?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80' },
-            { id: 'mario1', title: 'Super Mario Bros.', system: 'nes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario1.nes' },
-            { id: 'mario2', title: 'Super Mario Bros. 2', system: 'nes', image: 'https://images.unsplash.com/photo-1627063411738-95af79685a97?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario2.nes' },
-            { id: 'mario3', title: 'Super Mario Bros. 3', system: 'nes', image: 'https://images.unsplash.com/photo-1605897472359-85e4b94d685d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario3.nes' },
-            { id: 'tetris', title: 'Tetris', system: 'nes', image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/tetris.nes' },
-            { id: 'pacman', title: 'Pac-Man', system: 'nes', image: 'https://images.unsplash.com/photo-1579309401359-10701513a672?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/pacman.nes' },
-            { id: 'contra', title: 'Contra', system: 'nes', image: 'https://images.unsplash.com/photo-1590492463428-250325d70e4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/contra.nes' },
-            { id: 'zelda1', title: 'The Legend of Zelda', system: 'nes', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/zelda1.nes' },
-            { id: 'smworld', title: 'Super Mario World', system: 'snes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/smworld.sfc' }
+        // --- 1. Sound Logic ---
+        let isSoundEnabled = false;
+        async function toggleSound() {
+            const btn = document.getElementById('sound-toggle-btn');
+            if (!isSoundEnabled) {
+                // Try Enabling
+                const success = await window.SoundEngine.init();
+                if (success) {
+                    isSoundEnabled = true;
+                    btn.innerHTML = '🔈 SOUND: ON';
+                    btn.classList.add('active');
+                    window.SoundEngine.playBonus();
+                    console.log("Sound Enabled via Toggle");
+                }
+            } else {
+                // Disable (Mute)
+                isSoundEnabled = false;
+                btn.innerHTML = '🔊 SOUND: OFF';
+                btn.classList.remove('active');
+                console.log("Sound Muted");
+            }
+        }
+        
+        // Immediate bind to button as soon as it exists
+        document.getElementById('sound-toggle-btn').onclick = toggleSound;
+
+        // --- 2. Game Data & Rendering ---
+        const games = [
+            { id: 'rj2077', title: 'RetroJump 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80' },
+            { id: 'ng2077', title: 'Neon Galaga 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=400&q=80' },
+            { id: 'mario', title: 'Super Mario Bros', category: 'NES', console: 'NES', rom: 'roms/Super Mario Bros.nes', cover: 'https://images.unsplash.com/photo-1605898835373-043ec2c57802?w=400&q=80' },
+            { id: 'pacman', title: 'Pac-Man', category: 'NES', console: 'NES', rom: 'roms/Pac-Man.nes', cover: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=400&q=80' }
         ];
 
-        let currentSystem = 'all';
-
-        // --- ENGINES (Placeholders/Simplified) ---
-        class BaseEngine {
-            constructor(id) { this.canvas = document.getElementById(id); this.ctx = this.canvas.getContext('2d'); }
-            run() { this.loop(); }
-            loop() { this.update && this.update(); this.draw && this.draw(); requestAnimationFrame(() => this.loop()); }
-        }
-
-        // --- CORE LOGIC ---
-        function renderGames() {
+        function renderGames(category = 'NES') {
             const grid = document.getElementById('game-grid');
-            if (!grid) return;
             grid.innerHTML = '';
-            const filtered = currentSystem === 'all' ? GAMES : GAMES.filter(g => g.system === currentSystem);
+            const filtered = category === 'All' ? games : games.filter(g => g.category === category);
+            
             filtered.forEach(game => {
                 const card = document.createElement('div');
                 card.className = 'game-card';
-                card.innerHTML = `
-                    <div class="game-image-wrapper"><img src="${game.image}" alt="${game.title}" class="game-image"></div>
-                    <div class="game-info"><span class="game-system">${game.system}</span><h3 class="game-title">${game.title}</h3></div>
-                `;
                 card.onclick = () => launchGame(game);
+                card.innerHTML = `
+                    <div class="game-cover"><img src="${game.cover}" alt="${game.title}"></div>
+                    <div class="game-info">
+                        <h3>${game.title}</h3>
+                        <p>${game.console}</p>
+                    </div>
+                `;
                 grid.appendChild(card);
             });
         }
 
-        function launchGame(game) {
-            document.getElementById('current-game-title').textContent = game.title;
-            const container = document.getElementById('emulator-container');
-            container.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            
-            const screen = document.getElementById('emulator');
-            screen.innerHTML = '';
-
-            if (game.system === 'original') {
-                const canvas = document.createElement('canvas');
-                canvas.id = 'original-canvas';
-                canvas.width = 800; canvas.height = 400;
-                canvas.style.width = '100%'; canvas.style.height = 'auto';
-                screen.appendChild(canvas);
-                
-                // Fallback for missing engine files
-                if (typeof RetroJumpGame !== 'undefined' && game.id === 'retrojump-2077') {
-                   new RetroJumpGame('original-canvas').run();
-                } else if (typeof NeonGalagaGame !== 'undefined' && game.id === 'neongalaga-2077') {
-                   new NeonGalagaGame('original-canvas').run();
-                } else {
-                   const ctx = canvas.getContext('2d');
-                   ctx.fillStyle = '#ff00ff';
-                   ctx.font = '20px Orbitron';
-                   ctx.fillText('Original Engine Initializing...', 50, 50);
-                }
-            } else {
-                screen.innerHTML = '<div id="ejs-game" style="width:100%;height:100%"></div>';
-                window.EJS_player = '#ejs-game';
-                window.EJS_gameUrl = window.location.origin + game.romUrl;
-                window.EJS_core = game.system === 'nes' ? 'fceumm' : 'snes9x';
-                window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-                window.EJS_startOnHover = false;
-                const script = document.createElement('script');
-                script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-                document.body.appendChild(script);
-            }
-        }
-
-        // --- INIT ---
-        window.onload = () => {
-            renderGames();
+        function setupTabs() {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    currentSystem = btn.dataset.system;
-                    renderGames();
+                    renderGames(btn.dataset.category);
                 };
             });
-            document.getElementById('close-emulator').onclick = () => {
-                document.getElementById('emulator-container').classList.add('hidden');
-                document.body.style.overflow = 'auto';
-                document.getElementById('emulator').innerHTML = '';
-            };
-            // Sound Logic V5: Manual Unlock
-            for (let i=0; i<3; i++) { // Security Check
-                const sBtn = document.getElementById('sound-on-btn');
-                if(sBtn) {
-                    sBtn.onclick = async () => {
-                        console.log('SOUND ACTIVATION REQUESTED');
-                        if(window.SoundEngine) {
-                            const success = await window.SoundEngine.init();
-                            if(success) {
-                                window.SoundEngine.playBonus(); // Confirmation
-                                sBtn.innerHTML = '🔊 SOUND ACTIVE';
-                                sBtn.style.color = '#00f2ff';
-                                sBtn.style.border = '2px solid #00f2ff';
-                                console.log('SOUND ACTIVATED SUCCESSFULLY');
-                            }
-                        }
-                    };
-                    break;
-                }
+        }
+
+        function launchGame(game) {
+            const overlay = document.getElementById('emulator-overlay');
+            const title = document.getElementById('current-game-title');
+            title.innerText = game.title;
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            if (game.category === 'original') {
+                const emu = document.getElementById('emulator');
+                emu.innerHTML = `<canvas id="game-canvas"></canvas>`;
+                setTimeout(() => {
+                    let engine;
+                    if (game.id === 'rj2077') engine = new RetroJumpGame('game-canvas');
+                    else if (game.id === 'ng2077') engine = new NeonGalagaGame('game-canvas');
+                    if(engine) engine.run();
+                }, 100);
+            } else {
+                // EmulatorJS logic here...
+                console.log("Launching emulator for:", game.rom);
             }
+        }
+
+        function closeGame() {
+            document.getElementById('emulator-overlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            document.getElementById('emulator').innerHTML = '';
+        }
+
+        window.onload = () => {
+            renderGames('NES');
+            setupTabs();
+            console.log("Portal Initialized V6");
         };
     </script>
     <!-- Fallback external engines -->
