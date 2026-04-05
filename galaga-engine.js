@@ -69,6 +69,7 @@ class NeonGalagaGame {
     shoot() {
         if (this.gameState !== 'playing') return;
         this.bullets.push({ x: this.player.x + 23, y: this.player.y, speed: 12, color: '#f0f' });
+        if(window.SoundEngine) SoundEngine.playShoot();
     }
 
     update() {
@@ -120,6 +121,7 @@ class NeonGalagaGame {
     }
 
     createExplosion(x, y, color) {
+        if(window.SoundEngine) SoundEngine.playExplosion();
         for (let i = 0; i < 20; i++) {
             this.particles.push({
                 x: x + 15, y: y + 10,

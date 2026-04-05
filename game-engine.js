@@ -69,6 +69,7 @@ class RetroJumpGame {
         } else if (this.gameState === 'playing' && !this.player.isJumping) {
             this.player.dy = -this.player.jumpForce;
             this.player.isJumping = true;
+            if(window.SoundEngine) SoundEngine.playJump();
         }
     }
 
@@ -147,6 +148,7 @@ class RetroJumpGame {
             if (this.checkCollision(this.player, item, 0)) {
                 this.collectibles.splice(i, 1);
                 this.score += 5;
+                if(window.SoundEngine) SoundEngine.playBonus();
                 this.addPopup('BONUS +5', this.player.x, this.player.y);
                 if (this.score >= this.levelTargets[this.level - 1]) this.nextLevel();
             }
