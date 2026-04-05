@@ -1,47 +1,29 @@
-// Game Data Store
+// Game Data Store - Expanded Library
 const GAMES = [
-    {
-        id: 'super-mario-bros',
-        title: 'Super Mario Bros.',
-        system: 'nes',
-        image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
-        romUrl: 'https://archive.org/download/super-mario-bros-nes/Super%20Mario%20Bros.%20%28Japan%2C%20USA%29.nes'
-    },
-    {
-        id: 'donkey-kong-country',
-        title: 'Donkey Kong Country',
-        system: 'snes',
-        image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
-        romUrl: 'https://archive.org/download/snes_romset_202306/Donkey%20Kong%20Country%20%28USA%29.sfc'
-    },
-    {
-        id: 'pokemon-emerald',
-        title: 'Pokemon Emerald',
-        system: 'gba',
-        image: 'https://images.unsplash.com/photo-1613771404721-1f92d799e49f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
-        romUrl: 'https://archive.org/download/gba-romset-v1/Pokemon%20-%20Emerald%20Version%20%28USA%2C%20Europe%29.gba'
-    },
-    {
-        id: 'sonic-the-hedgehog',
-        title: 'Sonic The Hedgehog',
-        system: 'genesis',
-        image: 'https://images.unsplash.com/photo-1533236897111-3e94666b2edf?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
-        romUrl: 'https://archive.org/download/sega-genesis-romset-v1/Sonic%20The%20Hedgehog%20%28USA%2C%20Europe%29.md'
-    },
-    {
-        id: 'zelda-alink-to-the-past',
-        title: 'The Legend of Zelda: A Link to the Past',
-        system: 'snes',
-        image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
-        romUrl: 'https://archive.org/download/snes_romset_202306/Legend%20of%20Zelda%2C%20The%20-%20A%20Link%20to%20the%20Past%20%28USA%29.sfc'
-    },
-    {
-        id: 'tetris-gb',
-        title: 'Tetris',
-        system: 'nes', // Simplified for category
-        image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
-        romUrl: 'https://archive.org/download/super-mario-bros-nes/Tetris%20%28USA%29.nes'
-    }
+    // NES Games
+    { id: 'mario1', title: 'Super Mario Bros.', system: 'nes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario1.nes' },
+    { id: 'mario2', title: 'Super Mario Bros. 2', system: 'nes', image: 'https://images.unsplash.com/photo-1627063411738-95af79685a97?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario2.nes' },
+    { id: 'mario3', title: 'Super Mario Bros. 3', system: 'nes', image: 'https://images.unsplash.com/photo-1605897472359-85e4b94d685d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario3.nes' },
+    { id: 'tetris', title: 'Tetris', system: 'nes', image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/tetris.nes' },
+    { id: 'pacman', title: 'Pac-Man', system: 'nes', image: 'https://images.unsplash.com/photo-1579309401359-10701513a672?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/pacman.nes' },
+    { id: 'contra', title: 'Contra', system: 'nes', image: 'https://images.unsplash.com/photo-1590492463428-250325d70e4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/contra.nes' },
+    { id: 'zelda1', title: 'The Legend of Zelda', system: 'nes', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/zelda1.nes' },
+    { id: 'metroid', title: 'Metroid', system: 'nes', image: 'https://images.unsplash.com/photo-1614027164847-1b2809eb1899?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/metroid.nes' },
+    { id: 'megaman', title: 'Mega Man', system: 'nes', image: 'https://images.unsplash.com/photo-1605335198230-07ec8ad64604?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/megaman.nes' },
+    { id: 'dkong', title: 'Donkey Kong', system: 'nes', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/dkong.nes' },
+    
+    // SNES Games
+    { id: 'smworld', title: 'Super Mario World', system: 'snes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/smworld.sfc' },
+    { id: 'dkc1', title: 'Donkey Kong Country', system: 'snes', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/dkc1.sfc' },
+    { id: 'sf2', title: 'Street Fighter II', system: 'snes', image: 'https://images.unsplash.com/photo-1533236897111-3e94666b2edf?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sf2.sfc' },
+    
+    // Game Boy Advance
+    { id: 'poke-eme', title: 'Pokemon Emerald', system: 'gba', image: 'https://images.unsplash.com/photo-1613771404721-1f92d799e49f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/poke-eme.gba' },
+    { id: 'z-minish', title: 'The Legend of Zelda: The Minish Cap', system: 'gba', image: 'https://images.unsplash.com/photo-1533236897111-3e94666b2edf?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/minish.gba' },
+    
+    // Genesis/MD
+    { id: 'sonic1', title: 'Sonic The Hedgehog', system: 'genesis', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sonic1.md' },
+    { id: 'sonic2', title: 'Sonic The Hedgehog 2', system: 'genesis', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sonic2.md' }
 ];
 
 // App State
@@ -126,6 +108,8 @@ function launchGame(game) {
     // Clear previous script and instances
     const oldScript = document.getElementById('emulator-script');
     if (oldScript) oldScript.remove();
+    
+    // Empty the emulator div and prep for new instance
     emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
 
     // Core Mapping
@@ -158,7 +142,7 @@ function launchGame(game) {
     script.id = 'emulator-script';
     document.body.appendChild(script);
 
-    console.log(`Launching ${game.title} with core ${window.EJS_core} from stable CDN...`);
+    console.log(`Launching ${game.title} with core ${window.EJS_core}`);
 }
 
 function closeEmulator() {
@@ -177,9 +161,4 @@ function closeEmulator() {
     delete window.EJS_pathtodata;
     delete window.EJS_startOnHover;
     delete window.EJS_buttons;
-    
-    // Attempt to call any internal cleanup if exists
-    if (window.EJS_instance) {
-        // Some versions use instance cleanup
-    }
 }
