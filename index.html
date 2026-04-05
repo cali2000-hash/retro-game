@@ -14,6 +14,32 @@
         .logo { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: #fff; letter-spacing: 2px; }
         .status-badge { font-family: 'Orbitron', sans-serif; font-size: 10px; color: #00f2ff; border: 1px solid #00f2ff; padding: 3px 8px; border-radius: 4px; animation: glow 1.5s infinite alternate; }
         @keyframes glow { from { box-shadow: 0 0 5px #00f2ff; } to { box-shadow: 0 0 15px #00f2ff; } }
+
+        /* --- Mobile Controls FIXED V10 --- */
+        .mobile-controls { 
+            display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 180px; 
+            z-index: 10000; pointer-events: none; 
+        }
+        .dpad { 
+            position: absolute; left: 40px; bottom: 40px; display: flex; gap: 30px; pointer-events: auto; 
+        }
+        .action-btns { 
+            position: absolute; right: 40px; bottom: 40px; pointer-events: auto; 
+        }
+        .m-btn { 
+            width: 85px; height: 85px; background: rgba(255, 255, 255, 0.05); 
+            border: 3px solid rgba(255, 255, 255, 0.2); border-radius: 50%; color: #fff; 
+            display: flex; align-items: center; justify-content: center; font-size: 32px; 
+            font-family: 'Orbitron', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; 
+        }
+        #btn-left, #btn-right { border-color: #00f2ff; color: #00f2ff; }
+        #btn-fire { border-color: #ff00ff; color: #ff00ff; width: 100px; height: 100px; font-size: 40px; }
+        
+        .m-btn:active { background: #fff; color: #000; box-shadow: 0 0 30px #fff; transform: scale(0.9); }
+        #btn-left:active, #btn-right:active { background: #00f2ff; box-shadow: 0 0 30px #00f2ff; color: #000; }
+        #btn-fire:active { background: #ff00ff; box-shadow: 0 0 30px #ff00ff; color: #000; }
+
+        @media (max-width: 900px) { .mobile-controls { display: flex; } }
     </style>
 </head>
 <body>
@@ -47,15 +73,21 @@
         </div>
         <div class="emulator-screen">
             <div id="emulator"></div>
+            <!-- Mobile Virtual Controls V10 -->
             <div class="mobile-controls" id="v-controls">
-                <div class="dpad"><div class="m-btn" id="btn-left">◀</div><div class="m-btn" id="btn-right">▶</div></div>
-                <div class="action-btns"><div class="m-btn" id="btn-fire">A</div></div>
+                <div class="dpad">
+                    <div class="m-btn" id="btn-left">◀</div>
+                    <div class="m-btn" id="btn-right">▶</div>
+                </div>
+                <div class="action-btns">
+                    <div class="m-btn" id="btn-fire">FIRE</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. Smart Sound Logic V9 ---
+        // --- 1. Audio Activation Logic ---
         let audioUnlocked = false;
         async function unlockAudio() {
             if (audioUnlocked) return;
@@ -63,16 +95,12 @@
                 const success = await window.SoundEngine.init();
                 if (success) {
                     audioUnlocked = true;
-                    // Provide a subtle feedback
                     document.getElementById('audio-status').innerHTML = '🔊 AUDIO: ACTIVE';
                     document.getElementById('audio-status').style.borderColor = '#ff00ff';
                     document.getElementById('audio-status').style.color = '#ff00ff';
-                    console.log("Audio Unlocked on Interaction");
                 }
             }
         }
-        
-        // Listen for ANY interaction to unlock sound automatically
         window.addEventListener('mousedown', unlockAudio, { once: true });
         window.addEventListener('touchstart', unlockAudio, { once: true });
         window.addEventListener('keydown', unlockAudio, { once: true });
@@ -82,7 +110,7 @@
             { id: 'rj2077', title: 'RetroJump 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=420&q=80' },
             { id: 'ng2077', title: 'Neon Galaga 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=420&q=80' },
             { id: 'mario', title: 'Super Mario Bros', category: 'NES', console: 'NES', rom: 'roms/Super Mario Bros.nes', cover: 'https://images.unsplash.com/photo-1605898835373-043ec2c57802?w=400&q=80' },
-            { id: 'pacman', title: 'Pac-Man', category: 'NES', console: 'NES', rom: 'roms/Pac-Man.nes', cover: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=400&q=80' }
+            { id: 'pacman', title: 'Pac-Man', category: 'NES', console: 'NES', rom: 'roms/Pac-Man.nes', cover: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=420&q=80' }
         ];
 
         function renderGames(category = 'NES') {
@@ -101,9 +129,7 @@
         }
 
         function launchGame(game) {
-            // Unlock on launch if not yet unlocked
             unlockAudio();
-
             const overlay = document.getElementById('emulator-overlay');
             document.getElementById('current-game-title').innerText = game.title;
             overlay.style.display = 'flex';
@@ -116,23 +142,24 @@
                 emu.innerHTML = `<canvas id="game-canvas"></canvas>`;
                 document.getElementById('v-controls').style.display = 'flex';
                 setTimeout(() => {
-                    window.currentGame = game.id === 'rj2077' ? new RetroJumpGame('game-canvas') : new NeonGalagaGame('game-canvas');
-                    if(window.currentGame) window.currentGame.run();
-                    setupMobileButtons(window.currentGame);
+                    const engine = game.id === 'rj2077' ? new RetroJumpGame('game-canvas') : new NeonGalagaGame('game-canvas');
+                    if(engine) {
+                        engine.run();
+                        setupMobileButtons(engine);
+                    }
                 }, 100);
             } else {
                 document.getElementById('v-controls').style.display = 'none';
                 const container = document.createElement('div');
                 container.style.width = "100%"; container.style.height = "100%";
                 emu.appendChild(container);
-
                 const script = document.createElement('script');
                 script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
                 script.onload = () => {
                     window.EJS_player = '#emulator div';
                     window.EJS_bios = 'bios/'; window.EJS_gameUrl = game.rom;
                     window.EJS_core = game.console.toLowerCase();
-                    window.EJS_startOnLoaded = true; // Auto start sound-friendly
+                    window.EJS_startOnLoaded = true;
                 };
                 document.head.appendChild(script);
             }
@@ -147,11 +174,12 @@
                 if (isDown && code === 'Space' && gameInst.shoot) gameInst.shoot();
                 if (isDown && code === 'Space' && gameInst.handleAction) gameInst.handleAction({ code: 'Space' });
             };
-            bLeft.ontouchstart = () => simulateKey('ArrowLeft', true);
-            bLeft.ontouchend = () => simulateKey('ArrowLeft', false);
-            bRight.ontouchstart = () => simulateKey('ArrowRight', true);
-            bRight.ontouchend = () => simulateKey('ArrowRight', false);
-            bFire.ontouchstart = () => simulateKey('Space', true);
+            // Support both touch and mouse for testing
+            bLeft.onmousedown = bLeft.ontouchstart = (e) => { e.preventDefault(); simulateKey('ArrowLeft', true); };
+            bLeft.onmouseup = bLeft.ontouchend = (e) => { e.preventDefault(); simulateKey('ArrowLeft', false); };
+            bRight.onmousedown = bRight.ontouchstart = (e) => { e.preventDefault(); simulateKey('ArrowRight', true); };
+            bRight.onmouseup = bRight.ontouchend = (e) => { e.preventDefault(); simulateKey('ArrowRight', false); };
+            bFire.onmousedown = bFire.ontouchstart = (e) => { e.preventDefault(); simulateKey('Space', true); };
         }
 
         function closeGame() {
