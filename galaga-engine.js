@@ -1,6 +1,6 @@
 /**
- * Neon Galaga 2077 - Evolution 2.0
- * Premium Spaceship Design & Enhanced VFX
+ * Neon Galaga 2077 - Hardened Battle Edition (V3)
+ * Added Enemy Fire, Player HP, and Dynamic Difficulty.
  */
 
 class NeonGalagaGame {
@@ -18,11 +18,12 @@ class NeonGalagaGame {
 
         this.player = {
             x: 400, y: 530, w: 50, h: 40, speed: 8,
-            color: '#00f2ff', boosterFrame: 0
+            color: '#00f2ff', boosterFrame: 0, hp: 3
         };
 
         this.keys = {};
         this.bullets = [];
+        this.enemyBullets = []; // New: Enemy fire
         this.enemies = [];
         this.particles = [];
         
@@ -31,18 +32,24 @@ class NeonGalagaGame {
     }
 
     setupControls() {
-        window.addEventListener('keydown', (e) => {
+        const handleDown = (e) => {
             this.keys[e.code] = true;
             if (e.code === 'Space') this.shoot();
             if ((this.gameState === 'start' || this.gameState === 'gameover' || this.gameState === 'victory') && e.code === 'Enter') {
                 this.reset();
             }
-        });
-        window.addEventListener('keyup', (e) => this.keys[e.code] = false);
+        };
+        const handleUp = (e) => this.keys[e.code] = false;
+        
+        window.removeEventListener('keydown', handleDown);
+        window.removeEventListener('keyup', handleUp);
+        window.addEventListener('keydown', handleDown);
+        window.addEventListener('keyup', handleUp);
     }
 
     initEnemies() {
         this.enemies = [];
+        this.enemyBullets = [];
         const rows = 4;
         const cols = 8;
         for (let r = 0; r < rows; r++) {
@@ -61,12 +68,14 @@ class NeonGalagaGame {
         this.gameState = 'playing';
         this.score = 0;
         this.level = 1;
+        this.player.hp = 3;
         this.bullets = [];
+        this.enemyBullets = [];
         this.particles = [];
         this.initEnemies();
     }
 
-    shoot() {
+    async shoot() {
         if (this.gameState !== 'playing') return;
         this.bullets.push({ x: this.player.x + 23, y: this.player.y, speed: 12, color: '#f0f' });
         if(window.SoundEngine) SoundEngine.playShoot();
@@ -80,44 +89,60 @@ class NeonGalagaGame {
 
         this.player.boosterFrame += 0.5;
 
-        // Bullet Logic
+        // Player Bullets
         for (let i = this.bullets.length - 1; i >= 0; i--) {
-            const b = this.bullets[i];
-            b.y -= b.speed;
+            const b = this.bullets[i]; b.y -= b.speed;
             if (b.y < 0) this.bullets.splice(i, 1);
-
             this.enemies.forEach(en => {
                 if (en.alive && b.x > en.x && b.x < en.x + en.w && b.y > en.y && b.y < en.y + en.h) {
-                    en.hp--;
-                    this.bullets.splice(i, 1);
+                    en.hp--; this.bullets.splice(i, 1);
                     if(en.hp <= 0) {
-                        en.alive = false;
-                        this.score += 200;
+                        en.alive = false; this.score += 200;
                         this.createExplosion(en.x, en.y, en.color);
-                    } else {
-                        this.score += 50;
-                    }
+                    } else { this.score += 50; }
                 }
             });
         }
 
-        // Enemy Swarm Logic
-        let allDead = true;
-        const drift = Math.sin(Date.now() / 800) * 50;
-        this.enemies.forEach(en => {
-            if (en.alive) {
-                allDead = false;
-                en.x = en.baseX + drift;
+        // Enemy Bullets
+        for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+            const eb = this.enemyBullets[i];
+            eb.y += eb.speed;
+            if (eb.y > this.height) this.enemyBullets.splice(i, 1);
+            
+            // Player Collision
+            if (eb.x > this.player.x && eb.x < this.player.x + this.player.w && eb.y > this.player.y && eb.y < this.player.y + this.player.h) {
+                this.enemyBullets.splice(i, 1);
+                this.playerHit();
+            }
+        }
+
+        // Enemy Swarm Action
+        let livingEnemies = this.enemies.filter(e => e.alive);
+        if (livingEnemies.length === 0) { this.gameState = 'victory'; return; }
+
+        const driftSpeed = 800 - (32 - livingEnemies.length) * 10;
+        const drift = Math.sin(Date.now() / driftSpeed) * 60;
+        
+        livingEnemies.forEach(en => {
+            en.x = en.baseX + drift;
+            // Chance to fire back
+            if (Math.random() < 0.005 + (this.level * 0.002)) {
+                this.enemyBullets.push({ x: en.x + 15, y: en.y + 20, speed: 5 + this.level, color: '#ff3300' });
             }
         });
-        if (allDead) this.gameState = 'victory';
 
         // Particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
-            const p = this.particles[i];
-            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+            const p = this.particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.02;
             if (p.life <= 0) this.particles.splice(i, 1);
         }
+    }
+
+    playerHit() {
+        this.player.hp--;
+        this.createExplosion(this.player.x, this.player.y, '#ff0000');
+        if (this.player.hp <= 0) this.gameState = 'gameover';
     }
 
     createExplosion(x, y, color) {
@@ -136,13 +161,16 @@ class NeonGalagaGame {
         const ctx = this.ctx;
         ctx.fillStyle = '#050510'; ctx.fillRect(0, 0, this.width, this.height);
         this.drawStars();
-
         this.drawPlayer();
 
-        // Bullets
+        // All Bullets
         this.bullets.forEach(b => {
             ctx.shadowBlur = 10; ctx.shadowColor = b.color;
             ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, 4, 15);
+        });
+        this.enemyBullets.forEach(eb => {
+            ctx.shadowBlur = 15; ctx.shadowColor = eb.color;
+            ctx.fillStyle = eb.color; ctx.fillRect(eb.x, eb.y, 5, 12);
         });
 
         // Enemies
@@ -153,9 +181,7 @@ class NeonGalagaGame {
                 ctx.fillStyle = en.color;
                 ctx.fillRect(en.x, en.y, en.w, en.h);
                 ctx.fillStyle = '#000'; ctx.fillRect(en.x + 5, en.y + 5, en.w - 10, en.h - 10);
-                if(en.hp > 1) { // Elite enemy indicator
-                    ctx.fillStyle = '#fff'; ctx.fillRect(en.x + 10, en.y + 10, 10, 5);
-                }
+                if(en.hp > 1) { ctx.fillStyle = '#fff'; ctx.fillRect(en.x + 10, en.y + 10, 10, 5); }
                 ctx.restore();
             }
         });
@@ -168,56 +194,28 @@ class NeonGalagaGame {
 
         this.drawUI();
         if (this.gameState === 'start') this.drawOverlay('NEON GALAGA 2077', 'KOREAN RETRO EDITION\n\nPRESS ENTER TO FLY');
-        if (this.gameState === 'gameover') this.drawOverlay('MISSION FAILED', 'RELOAD MISSION (ENTER)');
+        if (this.gameState === 'gameover') this.drawOverlay('MISSION FAILED', `FINAL SCORE: ${this.score}\n\nRELOAD MISSION (ENTER)`);
         if (this.gameState === 'victory') this.drawOverlay('ZONE CLEAR', 'PREPARE FOR WARP (ENTER)');
     }
 
     drawPlayer() {
-        const ctx = this.ctx;
-        const p = this.player;
-        const time = Date.now() / 1000;
-        
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.shadowBlur = 20; ctx.shadowColor = p.color;
-
-        // Booster Flame
+        const ctx = this.ctx; const p = this.player;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.shadowBlur = 20; ctx.shadowColor = p.color;
         const bH = 10 + Math.sin(p.boosterFrame) * 10;
-        ctx.fillStyle = '#ff3300';
-        ctx.beginPath();
-        ctx.moveTo(15, 30); ctx.lineTo(25, 30 + bH); ctx.lineTo(35, 30); ctx.fill();
-        ctx.fillStyle = '#ffaa00';
-        ctx.beginPath();
-        ctx.moveTo(20, 30); ctx.lineTo(25, 30 + bH * 0.6); ctx.lineTo(30, 30); ctx.fill();
-
-        // Main Body (Cyber Hawk)
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.moveTo(25, 0);   // Nose
-        ctx.lineTo(0, 35);   // Left Wing
-        ctx.lineTo(15, 30);  // Left Intake
-        ctx.lineTo(35, 30);  // Right Intake
-        ctx.lineTo(50, 35);  // Right Wing
-        ctx.closePath();
-        ctx.fill();
-
-        // Cockpit
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.moveTo(25, 5); ctx.lineTo(20, 20); ctx.lineTo(30, 20); ctx.closePath();
-        ctx.fill();
-
-        // Wings Details
-        ctx.fillStyle = '#000';
-        ctx.fillRect(5, 25, 5, 5); ctx.fillRect(40, 25, 5, 5);
-
+        ctx.fillStyle = '#ff3300'; ctx.beginPath(); ctx.moveTo(15, 30); ctx.lineTo(25, 30 + bH); ctx.lineTo(35, 30); ctx.fill();
+        ctx.fillStyle = p.color; ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(0, 35); ctx.lineTo(15, 30); ctx.lineTo(35, 30); ctx.lineTo(50, 35); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(25, 5); ctx.lineTo(20, 20); ctx.lineTo(30, 20); ctx.closePath(); ctx.fill();
         ctx.restore();
     }
 
     drawUI() {
         const ctx = this.ctx; ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Orbitron"';
         ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${this.score}`, 30, 40);
-        ctx.textAlign = 'right'; ctx.fillText(`SYSTEM: STABLE`, this.width - 30, 40);
+        
+        ctx.textAlign = 'right'; 
+        ctx.fillStyle = '#00f2ff';
+        let hpIcons = ''; for(let i=0; i<this.player.hp; i++) hpIcons += '♥';
+        ctx.fillText(`ENERGY: ${hpIcons}`, this.width - 30, 40);
     }
 
     drawStars() {

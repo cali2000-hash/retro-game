@@ -317,6 +317,16 @@ nav {
     overflow: hidden;
 }
 
+.emulator-screen {
+    flex: 1;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #emulator {
     width: 100%;
     height: 100%;
