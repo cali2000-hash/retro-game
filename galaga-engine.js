@@ -1,6 +1,6 @@
 /**
- * Neon Galaga 2077 - Hardened Battle Edition (V3)
- * Added Enemy Fire, Player HP, and Dynamic Difficulty.
+ * Neon Galaga 2077 - Balance Patch (V4)
+ * Adjusted difficulty: Slower bullets, less frequent fire, faster player.
  */
 
 class NeonGalagaGame {
@@ -17,13 +17,13 @@ class NeonGalagaGame {
         this.level = 1;
 
         this.player = {
-            x: 400, y: 530, w: 50, h: 40, speed: 8,
+            x: 400, y: 530, w: 50, h: 40, speed: 10, // Faster player
             color: '#00f2ff', boosterFrame: 0, hp: 3
         };
 
         this.keys = {};
         this.bullets = [];
-        this.enemyBullets = []; // New: Enemy fire
+        this.enemyBullets = [];
         this.enemies = [];
         this.particles = [];
         
@@ -77,7 +77,7 @@ class NeonGalagaGame {
 
     async shoot() {
         if (this.gameState !== 'playing') return;
-        this.bullets.push({ x: this.player.x + 23, y: this.player.y, speed: 12, color: '#f0f' });
+        this.bullets.push({ x: this.player.x + 23, y: this.player.y, speed: 15, color: '#f0f' }); // Faster player fire
         if(window.SoundEngine) SoundEngine.playShoot();
     }
 
@@ -104,31 +104,30 @@ class NeonGalagaGame {
             });
         }
 
-        // Enemy Bullets
+        // Enemy Bullets (Slower & Balanced)
         for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
             const eb = this.enemyBullets[i];
             eb.y += eb.speed;
             if (eb.y > this.height) this.enemyBullets.splice(i, 1);
             
-            // Player Collision
             if (eb.x > this.player.x && eb.x < this.player.x + this.player.w && eb.y > this.player.y && eb.y < this.player.y + this.player.h) {
                 this.enemyBullets.splice(i, 1);
                 this.playerHit();
             }
         }
 
-        // Enemy Swarm Action
         let livingEnemies = this.enemies.filter(e => e.alive);
         if (livingEnemies.length === 0) { this.gameState = 'victory'; return; }
 
-        const driftSpeed = 800 - (32 - livingEnemies.length) * 10;
-        const drift = Math.sin(Date.now() / driftSpeed) * 60;
+        // Slower Swarm Drift
+        const driftSpeed = 1200 - (32 - livingEnemies.length) * 15;
+        const drift = Math.sin(Date.now() / driftSpeed) * 80;
         
         livingEnemies.forEach(en => {
             en.x = en.baseX + drift;
-            // Chance to fire back
-            if (Math.random() < 0.005 + (this.level * 0.002)) {
-                this.enemyBullets.push({ x: en.x + 15, y: en.y + 20, speed: 5 + this.level, color: '#ff3300' });
+            // Less frequent firing
+            if (Math.random() < 0.002 + (this.level * 0.001)) {
+                this.enemyBullets.push({ x: en.x + 15, y: en.y + 20, speed: 3 + this.level, color: '#ff3300' });
             }
         });
 
@@ -163,7 +162,6 @@ class NeonGalagaGame {
         this.drawStars();
         this.drawPlayer();
 
-        // All Bullets
         this.bullets.forEach(b => {
             ctx.shadowBlur = 10; ctx.shadowColor = b.color;
             ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, 4, 15);
@@ -173,7 +171,6 @@ class NeonGalagaGame {
             ctx.fillStyle = eb.color; ctx.fillRect(eb.x, eb.y, 5, 12);
         });
 
-        // Enemies
         this.enemies.forEach(en => {
             if (en.alive) {
                 ctx.save();
@@ -186,15 +183,14 @@ class NeonGalagaGame {
             }
         });
 
-        // Particles
         this.particles.forEach(p => {
             ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
             ctx.fillRect(p.x, p.y, 3, 3); ctx.globalAlpha = 1;
         });
 
         this.drawUI();
-        if (this.gameState === 'start') this.drawOverlay('NEON GALAGA 2077', 'KOREAN RETRO EDITION\n\nPRESS ENTER TO FLY');
-        if (this.gameState === 'gameover') this.drawOverlay('MISSION FAILED', `FINAL SCORE: ${this.score}\n\nRELOAD MISSION (ENTER)`);
+        if (this.gameState === 'start') this.drawOverlay('NEON GALAGA 2077', 'ENEMIES WEAKENED - GOOD LUCK\n\nPRESS ENTER TO FLY');
+        if (this.gameState === 'gameover') this.drawOverlay('MISSION FAILED', `SCORE: ${this.score}\nTRY AGAIN (ENTER)`);
         if (this.gameState === 'victory') this.drawOverlay('ZONE CLEAR', 'PREPARE FOR WARP (ENTER)');
     }
 
@@ -211,9 +207,7 @@ class NeonGalagaGame {
     drawUI() {
         const ctx = this.ctx; ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Orbitron"';
         ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${this.score}`, 30, 40);
-        
-        ctx.textAlign = 'right'; 
-        ctx.fillStyle = '#00f2ff';
+        ctx.textAlign = 'right'; ctx.fillStyle = '#00f2ff';
         let hpIcons = ''; for(let i=0; i<this.player.hp; i++) hpIcons += '♥';
         ctx.fillText(`ENERGY: ${hpIcons}`, this.width - 30, 40);
     }
@@ -223,7 +217,7 @@ class NeonGalagaGame {
         for (let i = 0; i < 60; i++) {
             const x = (i * 137 + Date.now() / 15) % this.width;
             const y = (i * 59 + Date.now() / 8) % this.height;
-            ctx.fillRect(x, y, 2, 2);
+            ctx.fillRect(x, y, 1.5, 1.5);
         }
     }
 
@@ -231,7 +225,7 @@ class NeonGalagaGame {
         this.ctx.fillStyle = 'rgba(0,0,0,0.85)'; this.ctx.fillRect(0, 0, this.width, this.height);
         this.ctx.textAlign = 'center'; this.ctx.fillStyle = '#ff00ff'; this.ctx.font = 'bold 50px "Orbitron"';
         this.ctx.fillText(title, this.width / 2, this.height / 2 - 20);
-        this.ctx.fillStyle = '#00f2ff'; this.ctx.font = '22px "Orbitron"';
+        this.ctx.fillStyle = '#00f2ff'; this.ctx.font = '18px "Orbitron"';
         this.ctx.fillText(subtitle, this.width / 2, this.height / 2 + 50);
     }
 
