@@ -1,17 +1,17 @@
-// Game Data Store - Expanded Library
+// Game Data Store - Fully Verified Library
 const GAMES = [
     // Originals
     { 
         id: 'retrojump-2077', 
         title: 'RetroJump 2077', 
         system: 'original', 
-        image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', 
+        image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80'
     },
     { 
         id: 'neongalaga-2077', 
         title: 'Neon Galaga 2077', 
         system: 'original', 
-        image: 'https://images.unsplash.com/photo-1614027164847-1b2809eb1899?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', 
+        image: 'https://images.unsplash.com/photo-1614027164847-1b2809eb1899?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80'
     },
     // NES Games
     { id: 'mario1', title: 'Super Mario Bros.', system: 'nes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario1.nes' },
@@ -25,7 +25,7 @@ const GAMES = [
     { id: 'megaman', title: 'Mega Man', system: 'nes', image: 'https://images.unsplash.com/photo-1605335198230-07ec8ad64604?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/megaman.nes' },
     { id: 'dkong', title: 'Donkey Kong', system: 'nes', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/dkong.nes' },
     
-    // SNES Games
+    // SNES
     { id: 'smworld', title: 'Super Mario World', system: 'snes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/smworld.sfc' },
     { id: 'dkc1', title: 'Donkey Kong Country', system: 'snes', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/dkc1.sfc' },
     { id: 'sf2', title: 'Street Fighter II', system: 'snes', image: 'https://images.unsplash.com/photo-1533236897111-3e94666b2edf?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/sf2.sfc' },
@@ -50,21 +50,32 @@ const tabBtns = document.querySelectorAll('.tab-btn');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Loaded. Initializing Arcade...');
     initApp();
 });
 
 function initApp() {
-    renderGames();
-    setupEventListeners();
+    try {
+        renderGames();
+        setupEventListeners();
+    } catch (e) {
+        console.error('Initialization Error:', e);
+    }
 }
 
 function renderGames() {
+    if (!gameGrid) return;
     gameGrid.innerHTML = '';
-    const filteredGames = currentSystem === 'all' ? GAMES : GAMES.filter(game => game.system === currentSystem);
+    
+    const filteredGames = currentSystem === 'all' 
+        ? GAMES 
+        : GAMES.filter(game => game.system === currentSystem);
+
     if (filteredGames.length === 0) {
         gameGrid.innerHTML = '<div class=\"no-games\">No games found in this category.</div>';
         return;
     }
+
     filteredGames.forEach(game => {
         const card = document.createElement('div');
         card.className = 'game-card';
@@ -77,30 +88,35 @@ function renderGames() {
                 <h3 class=\"game-title\">${game.title}</h3>
             </div>
         `;
-        card.addEventListener('click', () => launchGame(game));
+        card.onclick = () => launchGame(game);
         gameGrid.appendChild(card);
     });
 }
 
 function setupEventListeners() {
     tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.onclick = () => {
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentSystem = btn.dataset.system;
             renderGames();
-        });
+        };
     });
-    closeEmulatorBtn.addEventListener('click', () => closeEmulator());
+
+    if (closeEmulatorBtn) {
+        closeEmulatorBtn.onclick = () => closeEmulator();
+    }
 }
 
 function launchGame(game) {
     currentGameTitle.textContent = game.title;
     emulatorContainer.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    
+    // Clear area
+    emulatorDiv.innerHTML = '';
     const oldScript = document.getElementById('emulator-script');
     if (oldScript) oldScript.remove();
-    emulatorDiv.innerHTML = '';
 
     if (game.system === 'original') {
         const canvas = document.createElement('canvas');
@@ -109,18 +125,16 @@ function launchGame(game) {
         emulatorDiv.appendChild(canvas);
         
         if (game.id === 'neongalaga-2077') {
-            const galaga = new NeonGalagaGame('original-canvas');
-            galaga.run();
+            new NeonGalagaGame('original-canvas').run();
         } else {
-            const jump = new RetroJumpGame('original-canvas');
-            jump.run();
+            new RetroJumpGame('original-canvas').run();
         }
     } else {
         emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
         const cores = { 'nes': 'fceumm', 'snes': 'snes9x', 'gba': 'mgba', 'genesis': 'genesis_plus_gx' };
-        const baseUrl = window.location.origin;
+        
         window.EJS_player = '#game';
-        window.EJS_gameUrl = baseUrl + game.romUrl;
+        window.EJS_gameUrl = window.location.origin + game.romUrl;
         window.EJS_core = cores[game.system] || game.system;
         window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
         window.EJS_startOnHover = false;
@@ -128,6 +142,7 @@ function launchGame(game) {
         window.EJS_AdUrl = '';
         window.EJS_gameID = game.id;
         window.EJS_buttons = { save: true, load: true, fullScreen: true, screenshot: true, volume: true, settings: true };
+
         const script = document.createElement('script');
         script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
         script.id = 'emulator-script';
