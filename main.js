@@ -1,5 +1,13 @@
 // Game Data Store - Expanded Library
 const GAMES = [
+    // Originals
+    { 
+        id: 'retrojump-2077', 
+        title: 'RetroJump 2077', 
+        system: 'original', 
+        image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', 
+        type: 'custom' 
+    },
     // NES Games
     { id: 'mario1', title: 'Super Mario Bros.', system: 'nes', image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario1.nes' },
     { id: 'mario2', title: 'Super Mario Bros. 2', system: 'nes', image: 'https://images.unsplash.com/photo-1627063411738-95af79685a97?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', romUrl: '/roms/mario2.nes' },
@@ -105,63 +113,62 @@ function launchGame(game) {
     emulatorContainer.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
-    // Clear previous script and instances
+    // Clear previous
     const oldScript = document.getElementById('emulator-script');
     if (oldScript) oldScript.remove();
-    
-    // Empty the emulator div and prep for new instance
-    emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
+    emulatorDiv.innerHTML = '';
 
-    // Core Mapping
-    const cores = {
-        'nes': 'fceumm',
-        'snes': 'snes9x',
-        'gba': 'mgba',
-        'genesis': 'genesis_plus_gx'
-    };
+    if (game.system === 'original') {
+        // Launch custom original game
+        const canvas = document.createElement('canvas');
+        canvas.id = 'original-canvas';
+        canvas.classList.add('original-game-canvas');
+        emulatorDiv.appendChild(canvas);
+        
+        // Use the engine from game-engine.js
+        const customGame = new RetroJumpGame('original-canvas');
+        customGame.run();
+    } else {
+        // Launch EmulatorJS (Use absolute URLs for paths)
+        emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
+        
+        const cores = {
+            'nes': 'fceumm',
+            'snes': 'snes9x',
+            'gba': 'mgba',
+            'genesis': 'genesis_plus_gx'
+        };
 
-    // EmulatorJS Configuration (Using absolute URLs for paths)
-    const baseUrl = window.location.origin;
-    window.EJS_player = '#game';
-    window.EJS_gameUrl = baseUrl + game.romUrl; // Use absolute URL
-    window.EJS_core = cores[game.system] || game.system;
-    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-    window.EJS_startOnHover = false;
-    window.EJS_language = 'en-US';
-    window.EJS_AdUrl = ''; // No ads
-    window.EJS_gameID = game.id;
-    window.EJS_buttons = {
-        save: true,
-        load: true,
-        fullScreen: true,
-        screenshot: true,
-        volume: true,
-        settings: true
-    };
+        const baseUrl = window.location.origin;
+        window.EJS_player = '#game';
+        window.EJS_gameUrl = baseUrl + game.romUrl;
+        window.EJS_core = cores[game.system] || game.system;
+        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+        window.EJS_startOnHover = false;
+        window.EJS_language = 'en-US';
+        window.EJS_AdUrl = '';
+        window.EJS_gameID = game.id;
+        window.EJS_buttons = { save: true, load: true, fullScreen: true, screenshot: true, volume: true, settings: true };
 
-    // Load EmulatorJS Loader Script
-    const script = document.createElement('script');
-    script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-    script.id = 'emulator-script';
-    document.body.appendChild(script);
-
-    console.log(`Launching ${game.title} from ${window.EJS_gameUrl} via core ${window.EJS_core}...`);
+        const script = document.createElement('script');
+        script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+        script.id = 'emulator-script';
+        document.body.appendChild(script);
+        
+        console.log(`Launching ${game.title} via core ${window.EJS_core}...`);
+    }
 }
 
 function closeEmulator() {
     emulatorContainer.classList.add('hidden');
     document.body.style.overflow = 'auto';
     
-    // Stop the emulator by completely clearing the div and script
+    // Stop the emulator/game
     emulatorDiv.innerHTML = '';
     const script = document.getElementById('emulator-script');
     if (script) script.remove();
 
-    // Clean up EJS global variables
-    delete window.EJS_player;
-    delete window.EJS_gameUrl;
-    delete window.EJS_core;
-    delete window.EJS_pathtodata;
-    delete window.EJS_startOnHover;
-    delete window.EJS_buttons;
+    // Clean up EJS
+    delete window.EJS_player; delete window.EJS_gameUrl; delete window.EJS_core;
+    delete window.EJS_pathtodata; delete window.EJS_startOnHover; delete window.EJS_buttons;
 }
