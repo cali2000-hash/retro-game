@@ -2,31 +2,27 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RetroPlay - Neon Universe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .sound-btn { 
-            background: rgba(255, 255, 255, 0.1); 
-            border: 2px solid #fff; 
-            color: #fff; 
-            padding: 8px 15px; 
-            cursor: pointer; 
-            font-family: 'Orbitron', sans-serif; 
-            font-size: 13px; 
-            border-radius: 4px;
-            transition: all 0.3s ease;
-            min-width: 150px;
+        .sound-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid #555; color: #555; padding: 6px 15px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 11px; border-radius: 4px; transition: 0.3s; min-width: 140px; }
+        .sound-btn.active { border-color: #00f2ff; color: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
+        
+        /* Mobile Controls Styling */
+        .mobile-controls { display: none; position: absolute; bottom: 30px; left: 0; width: 100%; justify-content: space-between; padding: 0 40px; pointer-events: none; }
+        .dpad, .action-btns { display: flex; gap: 20px; pointer-events: auto; }
+        .m-btn { 
+            width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        .sound-btn.active { 
-            background: rgba(0, 242, 255, 0.2); 
-            border-color: #00f2ff; 
-            color: #00f2ff; 
-            box-shadow: 0 0 10px #00f2ff;
-        }
+        .m-btn:active { background: #00f2ff; border-color: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
+        
+        @media (max-width: 768px) { .mobile-controls { display: flex; } }
     </style>
 </head>
 <body>
@@ -50,14 +46,11 @@
             <button class="tab-btn" data-category="GBA">GBA</button>
             <button class="tab-btn" data-category="original">ORIGINALS</button>
         </div>
-
         <div id="game-grid" class="game-grid">
-            <!-- Games will be rendered here -->
             <div class="loading-spinner">Loading Retro Universe...</div>
         </div>
     </main>
 
-    <!-- Overlay / Emulator Container -->
     <div id="emulator-overlay" class="emulator-overlay">
         <div class="emulator-header">
             <h2 id="current-game-title">Game Title</h2>
@@ -65,41 +58,44 @@
         </div>
         <div class="emulator-screen">
             <div id="emulator"></div>
+            <!-- Mobile Virtual Controls -->
+            <div class="mobile-controls" id="v-controls">
+                <div class="dpad">
+                    <div class="m-btn" id="btn-left">◀</div>
+                    <div class="m-btn" id="btn-right">▶</div>
+                </div>
+                <div class="action-btns">
+                    <div class="m-btn" id="btn-fire">A</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Core App Logic (Integrated V6) -->
     <script>
         // --- 1. Sound Logic ---
         let isSoundEnabled = false;
         async function toggleSound() {
             const btn = document.getElementById('sound-toggle-btn');
             if (!isSoundEnabled) {
-                // Try Enabling
                 const success = await window.SoundEngine.init();
                 if (success) {
                     isSoundEnabled = true;
                     btn.innerHTML = '🔈 SOUND: ON';
                     btn.classList.add('active');
                     window.SoundEngine.playBonus();
-                    console.log("Sound Enabled via Toggle");
                 }
             } else {
-                // Disable (Mute)
                 isSoundEnabled = false;
                 btn.innerHTML = '🔊 SOUND: OFF';
                 btn.classList.remove('active');
-                console.log("Sound Muted");
             }
         }
-        
-        // Immediate bind to button as soon as it exists
         document.getElementById('sound-toggle-btn').onclick = toggleSound;
 
-        // --- 2. Game Data & Rendering ---
+        // --- 2. Game Logic ---
         const games = [
-            { id: 'rj2077', title: 'RetroJump 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80' },
-            { id: 'ng2077', title: 'Neon Galaga 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=400&q=80' },
+            { id: 'rj2077', title: 'RetroJump 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=420&q=80' },
+            { id: 'ng2077', title: 'Neon Galaga 2077', category: 'original', console: 'Web', cover: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=420&q=80' },
             { id: 'mario', title: 'Super Mario Bros', category: 'NES', console: 'NES', rom: 'roms/Super Mario Bros.nes', cover: 'https://images.unsplash.com/photo-1605898835373-043ec2c57802?w=400&q=80' },
             { id: 'pacman', title: 'Pac-Man', category: 'NES', console: 'NES', rom: 'roms/Pac-Man.nes', cover: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=400&q=80' }
         ];
@@ -107,53 +103,69 @@
         function renderGames(category = 'NES') {
             const grid = document.getElementById('game-grid');
             grid.innerHTML = '';
-            const filtered = category === 'All' ? games : games.filter(g => g.category === category);
-            
+            const filtered = games.filter(g => g.category === category);
             filtered.forEach(game => {
                 const card = document.createElement('div');
-                card.className = 'game-card';
-                card.onclick = () => launchGame(game);
+                card.className = 'game-card'; card.onclick = () => launchGame(game);
                 card.innerHTML = `
                     <div class="game-cover"><img src="${game.cover}" alt="${game.title}"></div>
-                    <div class="game-info">
-                        <h3>${game.title}</h3>
-                        <p>${game.console}</p>
-                    </div>
+                    <div class="game-info"><h3>${game.title}</h3><p>${game.console}</p></div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        function setupTabs() {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    renderGames(btn.dataset.category);
-                };
-            });
-        }
-
         function launchGame(game) {
             const overlay = document.getElementById('emulator-overlay');
-            const title = document.getElementById('current-game-title');
-            title.innerText = game.title;
+            document.getElementById('current-game-title').innerText = game.title;
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            
+            const emu = document.getElementById('emulator');
+            emu.innerHTML = '';
 
             if (game.category === 'original') {
-                const emu = document.getElementById('emulator');
                 emu.innerHTML = `<canvas id="game-canvas"></canvas>`;
+                document.getElementById('v-controls').style.display = 'flex';
                 setTimeout(() => {
-                    let engine;
-                    if (game.id === 'rj2077') engine = new RetroJumpGame('game-canvas');
-                    else if (game.id === 'ng2077') engine = new NeonGalagaGame('game-canvas');
-                    if(engine) engine.run();
+                    window.currentGame = game.id === 'rj2077' ? new RetroJumpGame('game-canvas') : new NeonGalagaGame('game-canvas');
+                    if(window.currentGame) window.currentGame.run();
+                    setupMobileButtons(window.currentGame);
                 }, 100);
             } else {
-                // EmulatorJS logic here...
-                console.log("Launching emulator for:", game.rom);
+                document.getElementById('v-controls').style.display = 'none';
+                // External EmulatorJS Loader
+                const container = document.createElement('div');
+                container.style.width = "100%"; container.style.height = "100%";
+                emu.appendChild(container);
+
+                const script = document.createElement('script');
+                script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
+                script.onload = () => {
+                    window.EJS_player = '#emulator div';
+                    window.EJS_bios = 'bios/'; window.EJS_gameUrl = game.rom;
+                    window.EJS_core = game.console.toLowerCase();
+                };
+                document.head.appendChild(script);
             }
+        }
+
+        function setupMobileButtons(gameInst) {
+            const bLeft = document.getElementById('btn-left');
+            const bRight = document.getElementById('btn-right');
+            const bFire = document.getElementById('btn-fire');
+
+            const simulateKey = (code, isDown) => {
+                if (gameInst.keys) gameInst.keys[code] = isDown;
+                if (isDown && code === 'Space' && gameInst.shoot) gameInst.shoot();
+                if (isDown && code === 'Space' && gameInst.handleAction) gameInst.handleAction({ code: 'Space' });
+            };
+
+            bLeft.ontouchstart = () => simulateKey('ArrowLeft', true);
+            bLeft.ontouchend = () => simulateKey('ArrowLeft', false);
+            bRight.ontouchstart = () => simulateKey('ArrowRight', true);
+            bRight.ontouchend = () => simulateKey('ArrowRight', false);
+            bFire.ontouchstart = () => simulateKey('Space', true);
         }
 
         function closeGame() {
@@ -164,12 +176,15 @@
 
         window.onload = () => {
             renderGames('NES');
-            setupTabs();
-            console.log("Portal Initialized V6");
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active'); renderGames(btn.dataset.category);
+                };
+            });
         };
     </script>
-    <!-- Fallback external engines -->
-    <script src="game-engine.js" onerror="console.log('Using integrated fallback')"></script>
-    <script src="galaga-engine.js" onerror="console.log('Using integrated fallback')"></script>
+    <script src="game-engine.js" onerror="console.log('Fallbk')"></script>
+    <script src="galaga-engine.js" onerror="console.log('Fallbk')"></script>
 </body>
 </html>
