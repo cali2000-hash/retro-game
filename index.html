@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RetroPlay - Free Retro Game Station</title>
+    <meta name="description" content="Enjoy free retro games in your browser. NES, SNES, GBA and more, playable on mobile and PC.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="glitch" data-text="RETROPLAY">RETROPLAY</span>
+            </div>
+            <nav>
+                <button id="btn-home" class="nav-btn active">Home</button>
+                <button id="btn-favorites" class="nav-btn">Favorites</button>
+                <button id="btn-about" class="nav-btn">About</button>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <section id="hero">
+                <div class="hero-content">
+                    <h1>Classic Gaming Reborn</h1>
+                    <p>Play retro legends instantly in your browser. No downloads required.</p>
+                </div>
+            </section>
+
+            <!-- Game Categories -->
+            <section id="categories">
+                <div class="category-tabs">
+                    <button class="tab-btn active" data-system="all">All</button>
+                    <button class="tab-btn" data-system="nes">NES</button>
+                    <button class="tab-btn" data-system="snes">SNES</button>
+                    <button class="tab-btn" data-system="gba">GBA</button>
+                    <button class="tab-btn" data-system="genesis">Genesis</button>
+                </div>
+            </section>
+
+            <!-- Game Grid -->
+            <section id="game-grid" class="game-grid">
+                <!-- Games will be injected here -->
+                <div class="loader">Loading Arcade...</div>
+            </section>
+        </main>
+
+        <!-- Emulator Overlay -->
+        <div id="emulator-container" class="hidden">
+            <div class="emulator-header">
+                <button id="close-emulator" class="icon-btn">&times;</button>
+                <h2 id="current-game-title">Game Title</h2>
+            </div>
+            <div id="emulator-wrapper">
+                <div id="emulator"></div>
+            </div>
+            <div class="emulator-controls">
+                <p>Pro Tip: Landscape mode is recommended for mobile devices.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-info">
+                <p>&copy; 2026 RetroPlay. All games are for educational and archival purposes.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script -->
+    <script src="main.js" type="module"></script>
+</body>
+</html>
