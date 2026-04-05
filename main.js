@@ -123,53 +123,55 @@ function launchGame(game) {
     emulatorContainer.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
-    // EmulatorJS Integration
-    const EJS_conf = {
-        data: {
-            // Pointing to a public EmulatorJS instance data path
-            // For a production site, you'd host these files yourself
-            location: 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/',
-            core: game.system,
-            gameUrl: game.romUrl,
-            startOnHover: false,
-            buttons: {
-                save: true,
-                load: true,
-                fullScreen: true,
-                screenshot: true,
-                volume: true,
-                settings: true
-            }
-        },
-        onLoad: () => {
-            console.log('Emulator loaded');
-        }
+    // Clear previous script and instances
+    const oldScript = document.getElementById('emulator-script');
+    if (oldScript) oldScript.remove();
+    emulatorDiv.innerHTML = '<div style=\"width:100%;height:100%;\" id=\"game\"></div>';
+
+    // EmulatorJS Configuration
+    // We use window variables which is the standard way for EmulatorJS
+    window.EJS_player = '#game';
+    window.EJS_gameUrl = game.romUrl;
+    window.EJS_core = game.system; // 'nes', 'snes', 'gba', 'genesis'
+    window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
+    window.EJS_startOnHover = false;
+    window.EJS_buttons = {
+        save: true,
+        load: true,
+        fullScreen: true,
+        screenshot: true,
+        volume: true,
+        settings: true
     };
 
-    // Load EmulatorJS Script
+    // Load EmulatorJS Loader Script
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js';
     script.id = 'emulator-script';
-    
-    // Clear previous emulator instance if any
-    emulatorDiv.innerHTML = '';
-    
-    window.EJS_conf = EJS_conf;
     document.body.appendChild(script);
+
+    console.log(`Launching ${game.title} on ${game.system}...`);
 }
 
 function closeEmulator() {
     emulatorContainer.classList.add('hidden');
     document.body.style.overflow = 'auto';
     
-    // Stop the emulator by removing its elements and script
+    // Stop the emulator by completely clearing the div and script
     emulatorDiv.innerHTML = '';
     const script = document.getElementById('emulator-script');
     if (script) script.remove();
+
+    // Clean up EJS global variables
+    delete window.EJS_player;
+    delete window.EJS_gameUrl;
+    delete window.EJS_core;
+    delete window.EJS_pathtodata;
+    delete window.EJS_startOnHover;
+    delete window.EJS_buttons;
     
-    // Some cleanup tasks might be needed for the actual library
+    // Attempt to call any internal cleanup if exists
     if (window.EJS_instance) {
-        // EJS dummy cleanup - specific versions might differ
-        delete window.EJS_conf;
+        // Some versions use instance cleanup
     }
 }
