@@ -8,11 +8,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .sound-btn { background: transparent; border: 1px solid #fff; color: #fff; padding: 5px 10px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 12px; }
+        .sound-btn:hover { background: #fff; color: #000; }
+    </style>
 </head>
 <body>
-    <script src=\"sound-effects.js\"></script>
-    <header class=\"header\">
-        <div class="logo">RETROPLAY</div>
+    <script src="sound-effects.js"></script>
+    <header class="header">
+        <div class="logo-container" style="display:flex; align-items:center; gap:20px;">
+            <div class="logo">RETROPLAY</div>
+            <button id="sound-on-btn" class="sound-btn">🔊 SOUND ON</button>
+        </div>
         <nav class="nav">
             <a href="#" class="nav-link active">Home</a>
             <a href="#" class="nav-link">Favorites</a>
@@ -152,11 +159,17 @@
                 document.body.style.overflow = 'auto';
                 document.getElementById('emulator').innerHTML = '';
             };
-            // Sound Fix: Unlock Audio on first click
-            const unlock = () => { if(window.SoundEngine) SoundEngine.init(); window.removeEventListener('mousedown', unlock); window.removeEventListener('touchstart', unlock); window.removeEventListener('keydown', unlock); };
-            window.addEventListener('mousedown', unlock);
-            window.addEventListener('touchstart', unlock);
-            window.addEventListener('keydown', unlock);
+            // Sound Fix: Manual Unlock Button
+            const sBtn = document.getElementById('sound-on-btn');
+            if(sBtn) sBtn.onclick = async () => {
+                if(window.SoundEngine) {
+                    await SoundEngine.init();
+                    SoundEngine.playBonus(); // Confirmation Sound
+                    sBtn.innerHTML = '🔊 SOUND ACTIVE';
+                    sBtn.style.color = '#00f2ff';
+                    sBtn.style.borderColor = '#00f2ff';
+                }
+            };
         };
     </script>
     <!-- Fallback external engines -->
