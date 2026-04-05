@@ -9,20 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .sound-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid #555; color: #555; padding: 6px 15px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 11px; border-radius: 4px; transition: 0.3s; min-width: 140px; }
-        .sound-btn.active { border-color: #00f2ff; color: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
-        
-        /* Mobile Controls Styling */
-        .mobile-controls { display: none; position: absolute; bottom: 30px; left: 0; width: 100%; justify-content: space-between; padding: 0 40px; pointer-events: none; }
-        .dpad, .action-btns { display: flex; gap: 20px; pointer-events: auto; }
-        .m-btn { 
-            width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); 
-            border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; user-select: none; -webkit-tap-highlight-color: transparent;
-        }
-        .m-btn:active { background: #00f2ff; border-color: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
-        
-        @media (max-width: 768px) { .mobile-controls { display: flex; } }
+        /* Modern Header UI */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: #fff; letter-spacing: 2px; }
+        .status-badge { font-family: 'Orbitron', sans-serif; font-size: 10px; color: #00f2ff; border: 1px solid #00f2ff; padding: 3px 8px; border-radius: 4px; animation: glow 1.5s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 5px #00f2ff; } to { box-shadow: 0 0 15px #00f2ff; } }
     </style>
 </head>
 <body>
@@ -30,7 +21,7 @@
     <header class="header">
         <div class="logo-container" style="display:flex; align-items:center; gap:20px;">
             <div class="logo">RETROPLAY</div>
-            <button id="sound-toggle-btn" class="sound-btn">🔊 SOUND: OFF</button>
+            <div class="status-badge" id="audio-status">🔊 AUDIO: AUTO-READY</div>
         </div>
         <nav class="nav">
             <a href="#" class="nav-link active">Home</a>
@@ -46,9 +37,7 @@
             <button class="tab-btn" data-category="GBA">GBA</button>
             <button class="tab-btn" data-category="original">ORIGINALS</button>
         </div>
-        <div id="game-grid" class="game-grid">
-            <div class="loading-spinner">Loading Retro Universe...</div>
-        </div>
+        <div id="game-grid" class="game-grid"></div>
     </main>
 
     <div id="emulator-overlay" class="emulator-overlay">
@@ -58,39 +47,35 @@
         </div>
         <div class="emulator-screen">
             <div id="emulator"></div>
-            <!-- Mobile Virtual Controls -->
             <div class="mobile-controls" id="v-controls">
-                <div class="dpad">
-                    <div class="m-btn" id="btn-left">◀</div>
-                    <div class="m-btn" id="btn-right">▶</div>
-                </div>
-                <div class="action-btns">
-                    <div class="m-btn" id="btn-fire">A</div>
-                </div>
+                <div class="dpad"><div class="m-btn" id="btn-left">◀</div><div class="m-btn" id="btn-right">▶</div></div>
+                <div class="action-btns"><div class="m-btn" id="btn-fire">A</div></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. Sound Logic ---
-        let isSoundEnabled = false;
-        async function toggleSound() {
-            const btn = document.getElementById('sound-toggle-btn');
-            if (!isSoundEnabled) {
+        // --- 1. Smart Sound Logic V9 ---
+        let audioUnlocked = false;
+        async function unlockAudio() {
+            if (audioUnlocked) return;
+            if (window.SoundEngine) {
                 const success = await window.SoundEngine.init();
                 if (success) {
-                    isSoundEnabled = true;
-                    btn.innerHTML = '🔈 SOUND: ON';
-                    btn.classList.add('active');
-                    window.SoundEngine.playBonus();
+                    audioUnlocked = true;
+                    // Provide a subtle feedback
+                    document.getElementById('audio-status').innerHTML = '🔊 AUDIO: ACTIVE';
+                    document.getElementById('audio-status').style.borderColor = '#ff00ff';
+                    document.getElementById('audio-status').style.color = '#ff00ff';
+                    console.log("Audio Unlocked on Interaction");
                 }
-            } else {
-                isSoundEnabled = false;
-                btn.innerHTML = '🔊 SOUND: OFF';
-                btn.classList.remove('active');
             }
         }
-        document.getElementById('sound-toggle-btn').onclick = toggleSound;
+        
+        // Listen for ANY interaction to unlock sound automatically
+        window.addEventListener('mousedown', unlockAudio, { once: true });
+        window.addEventListener('touchstart', unlockAudio, { once: true });
+        window.addEventListener('keydown', unlockAudio, { once: true });
 
         // --- 2. Game Logic ---
         const games = [
@@ -116,6 +101,9 @@
         }
 
         function launchGame(game) {
+            // Unlock on launch if not yet unlocked
+            unlockAudio();
+
             const overlay = document.getElementById('emulator-overlay');
             document.getElementById('current-game-title').innerText = game.title;
             overlay.style.display = 'flex';
@@ -134,7 +122,6 @@
                 }, 100);
             } else {
                 document.getElementById('v-controls').style.display = 'none';
-                // External EmulatorJS Loader
                 const container = document.createElement('div');
                 container.style.width = "100%"; container.style.height = "100%";
                 emu.appendChild(container);
@@ -145,6 +132,7 @@
                     window.EJS_player = '#emulator div';
                     window.EJS_bios = 'bios/'; window.EJS_gameUrl = game.rom;
                     window.EJS_core = game.console.toLowerCase();
+                    window.EJS_startOnLoaded = true; // Auto start sound-friendly
                 };
                 document.head.appendChild(script);
             }
@@ -154,13 +142,11 @@
             const bLeft = document.getElementById('btn-left');
             const bRight = document.getElementById('btn-right');
             const bFire = document.getElementById('btn-fire');
-
             const simulateKey = (code, isDown) => {
                 if (gameInst.keys) gameInst.keys[code] = isDown;
                 if (isDown && code === 'Space' && gameInst.shoot) gameInst.shoot();
                 if (isDown && code === 'Space' && gameInst.handleAction) gameInst.handleAction({ code: 'Space' });
             };
-
             bLeft.ontouchstart = () => simulateKey('ArrowLeft', true);
             bLeft.ontouchend = () => simulateKey('ArrowLeft', false);
             bRight.ontouchstart = () => simulateKey('ArrowRight', true);
