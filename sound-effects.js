@@ -6,9 +6,12 @@
 const SoundEngine = {
     audioCtx: null,
 
-    init() {
+    async init() {
         if (!this.audioCtx) {
             this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.audioCtx.state === 'suspended') {
+            await this.audioCtx.resume();
         }
     },
 
